@@ -4,7 +4,7 @@
 
 #from grass import script as gs
 import os
-from glob import glob
+import glob
 import numpy as np
 from netCDF4 import Dataset
 import nio
@@ -19,7 +19,9 @@ pr.enable()
 # need to fix
 # 1. time stamping 
 
-folderpath=u'/Users/katherinebarnhart/MATLABwork/SeaIce/NSIDCseaIce/'
+folderpath=u'/Volumes/Pitcairn/seaicePPF/northernHemisphere/nsidcObservations/'
+pathIn=u'/Volumes/Pitcairn/seaicePPF/p/cesm0005/CESM-CAM5-BGC-LE/ice/proc/tseries/daily/aice_d/'
+fn_sat='/Volumes/Pitcairn/seaicePPF/northernHemisphere/analysisOutput/satelliteObs.timeseries.nc'
 
 path=folderpath+'/supportingFiles'
 os.chdir(path)
@@ -53,13 +55,14 @@ longrid=longrid.reshape((448,304))
 #plt.show()
 
 
-yrs=range(1979, 2014)
+yrs=range(1979, 2015)
 # time is in "days since 1979-01-01 00:00:00"  
 reftime=datetime(min(yrs), 1, 1, 0, 0, 0)
 endtime=datetime(max(yrs), 12, 31, 0, 0, 0)
 
 totalTime=endtime-reftime
-numFiles=12784
+numFiles=12784+365
+
 
 #totalTime.days
 
@@ -72,7 +75,6 @@ i=0
 startTime = datetime.now()  
 dates=[]
 
-path=u'/Volumes/Pitcairn/seaicePPF/p/cesm0005/CESM-CAM5-BGC-LE/ice/proc/tseries/daily/aice_d/'
 #path=u'/Users/katherinebarnhart/Desktop/RESEARCH/seaIcePPF/b*timeseries.nc'
 dirList=glob.glob(pathIn+'b*nh*.nc')
 f=nio.open_file(dirList[0], 'r')
@@ -81,22 +83,21 @@ fillVal=f.variables['aice_d'].__dict__['_FillValue']
 f.close()
 del f
 
-
 for y in yrs:
     path=folderpath+str(y)
     os.chdir(path)
-    filenames = sorted(glob('nt*.bin'))
+    filenames = sorted(glob.glob('nt*.bin'))
     if (len(filenames)>367) or (len(filenames)==263):
         datesSort=[fn[3:11] for fn in filenames]
         udates=sorted(set(datesSort))
         newFiles=[] 
         for ud in udates:
-	    tempFiles = sorted(glob('nt*'+ud+'*.bin'))
+	    tempFiles = sorted(glob.glob('nt*'+ud+'*.bin'))
 	    if len(tempFiles)==1:
 	        newFiles.append(tempFiles[0])
 	    else:   
        	        nums=[int(fn[13:15]) for fn in tempFiles]
-       	        moreFiles=sorted(glob('nt*'+ud+'*'+str(max(nums))+'*.bin'))
+       	        moreFiles=sorted(glob.glob('nt*'+ud+'*'+str(max(nums))+'*.bin'))
        	        newFiles.append(moreFiles[0])
         filenames=newFiles
         
@@ -187,13 +188,10 @@ for y in yrs:
               
                             
 # 2. get this into an netcdf:
-path=u'/Volumes/Svalbard/seaIcePPF/*timeseries.nc'
-#path=u'/Users/katherinebarnhart/Desktop/RESEARCH/seaIcePPF/*timeseries.nc'
 
-dirList=glob(path)
+dirList=glob.glob(pathIn+'*nc')
 f=nio.open_file(dirList[0], 'r')
 
-fn_sat='/Volumes/Svalbard/seaIcePPF/satelliteObs.timeseries.nc'
 #fn_sat='/Users/katherinebarnhart/Desktop/RESEARCH/seaIcePPF/satelliteObs.timeseries.nc'
 fsat=Dataset(fn_sat, 'w',format='NETCDF4')
     

@@ -23,7 +23,7 @@ owThresh=15 # sea ice concentration for "open Water"
 midSIF=250  # day of year for "middle of SIF season" 215~= August 1st
 midIce=70
 
-fn=u'/Volumes/Pitcairn/seaicePPF/northernHemisphere/cesmleOutput/satelliteObs.timeseries.nc'
+fn='/Volumes/Pitcairn/seaicePPF/northernHemisphere/analysisOutput/satelliteObs.timeseries.nc'
 daysPerMonth=[31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 cumDaysInYear=np.cumsum(daysPerMonth)
 
