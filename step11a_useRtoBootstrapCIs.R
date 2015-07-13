@@ -36,28 +36,24 @@ samplesd <- function(x, d) {
   return(sd(x[d]))
 }
 
+
+# eventually this will be a loop
+
 ny<-80
 njj<-60
 nii<-156
 
 vals=data[nii,njj,ny,]
 
-boot_result <- boot(vals,statistic=samplemean,R=1000)
-boot_result
+boot_result_mean <- boot(vals,statistic=samplemean,R=1000)
+boot_result_mean
 mean(vals,na.rm=T)
-boot.ci(boot_result,conf = 0.95)
-
-# Stdev
-
-std_df <- read.csv("./stdsVals.txt",header=F)
-transp_std <- t(std_df)
-samplesd <- function(x, d) {
-  return(sd(x[d]))
-}
+boot.ci(boot_result_mean,conf = 0.95)
 
 
-boot_result_stdev <- boot(transp_mean[1:30,1],statistic=samplesd,R=1000)
+boot_result_stdev <- boot(vals,statistic=samplesd,R=1000)
 boot_result_stdev
-sd(transp_mean[,1],na.rm=T)
+sd(vals,na.rm=T)
 
-boot.ci(boot_result_stdev)
+boot.ci(boot_result_stdev,conf = 0.95)
+
