@@ -7,6 +7,8 @@ from datetime import timedelta
 import os
 import glob
 
+
+
 ## to add:
 #1. compatability with sea ice obs times (2 day obs, real years)
 #2. distance to nearest ice edge analysis
@@ -36,7 +38,7 @@ print 'Starting averaging of', fn
 fn_monthOut=fn[:-2]+'monthlyAvg.nc'
 #
 f=nio.open_file(fn, 'r')
-numyears=35
+numyears=37
 t=f.variables['time'][:]
 
 reftime=datetime(1979, 1, 1, 0, 0, 0)
@@ -61,34 +63,36 @@ startYear=1979
 for i in range(numyears): 
     #print 'year = ',i+int(t[0]/365)
     for j in range(12):
-        startDate=datetime(startYear+i, j+1, 1, 0, 0, 0)
         try:
-            endDate=datetime(startYear+i, j+2, 1, 0, 0, 0)
-        except: # this will break for december
-            endDate=datetime(startYear+i+1, 1, 1, 0, 0, 0)
-        startOrd=startDate-reftime
-        endOrd=endDate-reftime
+            startDate=datetime(startYear+i, j+1, 1, 0, 0, 0)
+            try:
+                endDate=datetime(startYear+i, j+2, 1, 0, 0, 0)
+            except: # this will break for december
+                endDate=datetime(startYear+i+1, 1, 1, 0, 0, 0)
+            startOrd=startDate-reftime
+            endOrd=endDate-reftime
         
                 
-        inRange=(t>=startOrd.days)*(t<endOrd.days)
-        indStart=np.where(inRange==True)[0][0]
-        indStop=np.where(inRange==True)[0][-1]+1
+            inRange=(t>=startOrd.days)*(t<endOrd.days)
+            indStart=np.where(inRange==True)[0][0]
+            indStop=np.where(inRange==True)[0][-1]+1
         
         
-        #indStart=int(i*daysPerYear+np.remainder(cumDaysInYear[j-1], daysPerYear))
-        #indStop=int(i*daysPerYear+cumDaysInYear[j]-1)
-        #
-        print i, j, indStart, indStop, (datetime.now()-startTime)
-        selt=f.variables['time'][indStart:indStop]
-        selIce=f.variables[satKey][indStart:indStop,:,:]
-        meanIce=selIce.mean(axis=0)
-        meanIce[selIce[0,:,:]==f.variables[satKey].__dict__['_FillValue']]=f.variables[satKey].__dict__['_FillValue']
-        monthlyAvgSIC[arrayItter,:,:]=meanIce
-        monthlyTimestep[arrayItter]=round(selt.mean(axis=0))
-        monthlyTimeBounds[arrayItter, 0]=f.variables['time_bounds'][indStart,0]
-        monthlyTimeBounds[arrayItter, 1]=f.variables['time_bounds'][indStop,1]
-        arrayItter+=1
-        
+            #indStart=int(i*daysPerYear+np.remainder(cumDaysInYear[j-1], daysPerYear))
+            #indStop=int(i*daysPerYear+cumDaysInYear[j]-1)
+            #
+            print i, j, indStart, indStop, (datetime.now()-startTime)
+            selt=f.variables['time'][indStart:indStop]
+            selIce=f.variables[satKey][indStart:indStop,:,:]
+            meanIce=selIce.mean(axis=0)
+            meanIce[selIce[0,:,:]==f.variables[satKey].__dict__['_FillValue']]=f.variables[satKey].__dict__['_FillValue']
+            monthlyAvgSIC[arrayItter,:,:]=meanIce
+            monthlyTimestep[arrayItter]=round(selt.mean(axis=0))
+            monthlyTimeBounds[arrayItter, 0]=f.variables['time_bounds'][indStart,0]
+            monthlyTimeBounds[arrayItter, 1]=f.variables['time_bounds'][indStop,1]
+            arrayItter+=1
+        except:
+            dum=1
 ## Create this monthly averaged file as a new netcdf
 fn_monthOut=fn[:-2]+'monthlyAvg.nc'
 fMonth=Dataset(fn_monthOut, 'w',format='NETCDF4')

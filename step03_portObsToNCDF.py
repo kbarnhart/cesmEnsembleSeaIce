@@ -55,13 +55,13 @@ longrid=longrid.reshape((448,304))
 #plt.show()
 
 
-yrs=range(1979, 2015)
+yrs=range(1979, 2016)
 # time is in "days since 1979-01-01 00:00:00"  
 reftime=datetime(min(yrs), 1, 1, 0, 0, 0)
 endtime=datetime(max(yrs), 12, 31, 0, 0, 0)
 
 totalTime=endtime-reftime
-numFiles=12784+365
+numFiles=12784+365+192
 
 
 #totalTime.days

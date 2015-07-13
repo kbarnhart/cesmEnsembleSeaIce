@@ -10,7 +10,8 @@ from scipy import stats
 import math
 import itertools as it
 from scipy.stats import ks_2samp
-import numpy.ma as ma
+import scikits.bootstrap as bootstrap
+import scipy  
 
 #import matplotlib.pyplot as plt
 #import matplotlib as mpl
@@ -129,7 +130,27 @@ stds_p_ks=np.zeros((numModels85, numYears, nj, ni), dtype=np.float16)
 mean_stat_ks=np.ones((numModels85, numYears, nj, ni), dtype=np.float16) # set to one, so that the first comparison had bad statistic
 stds_stat_ks=np.ones((numModels85, numYears, nj, ni), dtype=np.float16)
 
+numCI=1000
+CIsMeanUB=np.nan*np.zeros((numYears, nj, ni), dtype=np.float16)
+CIsMeanLB=np.nan*np.zeros((numYears, nj, ni), dtype=np.float16)
+CIsStdsUB=np.nan*np.zeros((numYears, nj, ni), dtype=np.float16)
+CIsStdsLB=np.nan*np.zeros((numYears, nj, ni), dtype=np.float16)
 
+for yr in range(numYears):
+    print yr, (datetime.now()-startTime)
+    for nii in range(ni):
+        for njj in range(nj): 
+            vals=nSIF85[:, yr, njj, nii]
+            if np.std(vals)>0:
+                if mean30[0,njj,nii]<363.:
+                    CIsMean = bootstrap.ci(vals, scipy.mean, n_samples=numCI, alpha=0.05) 
+                    CIsStds = bootstrap.ci(vals, scipy.std, n_samples=numCI, alpha=0.05) 
+                    CIsMeanUB[yr, njj, nii]=CIsMean.max()
+                    CIsMeanLB[yr, njj, nii]=CIsMean.min()
+                    CIsStdsUB[yr, njj, nii]=CIsStds.max()
+                    CIsStdsLB[yr, njj, nii]=CIsStds.min()
+               
+                
 for nmm in range(numModels85):
     startTime = datetime.now()
     combos=combinations85[nmm]
@@ -157,9 +178,11 @@ for nmm in range(numModels85):
 
         tempMeans=np.nanmean(nSIF85[inds, :, :, :], axis=0)
         tempStds=np.nanstd(nSIF85[inds, :, :, :], axis=0)
-
-        tempMeans_bool+=(tempMeans>(mean30*0.975))*(tempMeans<(mean30*1.025)) # number within the range
-        tempStds_bool+=(tempStds>(std30*0.975))*(tempStds<(std30*1.025))
+        
+        # bootstrap confidence interval
+    
+        tempMeans_bool+=(tempMeans>(CIsMean.min()))*(tempMeans<(CIsMean.max())) # number within the range
+        tempStds_bool+=(tempStds>(CIsStds.min()))*(tempStds<(CIsStds.max()))
 
         means[nc, :,:,:]=tempMeans
         stds[nc, :,:,:]=tempStds
