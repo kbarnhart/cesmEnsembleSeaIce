@@ -37,6 +37,9 @@ samplesd <- function(x, d) {
 }
 
 
+# create ouptu matrices
+mean_ub <- array(data = NA, dim=c()
+
 # eventually this will be a loop
 
 ny<-80
@@ -46,14 +49,13 @@ nii<-156
 vals=data[nii,njj,ny,]
 
 boot_result_mean <- boot(vals,statistic=samplemean,R=1000)
-boot_result_mean
-mean(vals,na.rm=T)
-boot.ci(boot_result_mean,conf = 0.95)
-
+mean <- mean(vals,na.rm=T)
+mean_ci <- boot.ci(boot_result_mean,conf = 0.95,type = "basic")
+mean_ub <- mean_ci$basic[4]
+mean_lb <- mean_ci$basic[5]
 
 boot_result_stdev <- boot(vals,statistic=samplesd,R=1000)
-boot_result_stdev
-sd(vals,na.rm=T)
-
-boot.ci(boot_result_stdev,conf = 0.95)
-
+sd <- sd(vals,na.rm=T)
+sd_ci <- boot.ci(boot_result_stdev,conf = 0.95, type = "basic")
+sd_ub <- sd_ci$basic[4]
+sd_lb <- sd_ci$basic[5]

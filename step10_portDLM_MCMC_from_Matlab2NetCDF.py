@@ -16,12 +16,16 @@ startTime = datetime.now()
 
 import glob
 
+
+fn_monthOut=u'/Volumes/Pitcairn/seaicePPF/northernHemisphere/analysisOutput/DLM__MCMC_results_final.nc'
+
+
 ## get the Sea ice days info 
-path=u'/Volumes/Pitcairn/seaicePPF/northernHemisphere/cesmleOutput/'
+path=u'/Volumes/Pitcairn/seaicePPF/northernHemisphere/analysisOutput/'
 #path=u'/Users/katherinebarnhart/Desktop/RESEARCH/seaIcePPF/'
 #os.chdir(path)
-dirList=glob.glob(path+'b.e11.f09_g16.001.*.timeseries.Analysis.nc')
-dirList2=glob.glob(path+'b.e11.B1850C5CN.*.timeseries.Analysis.nc')#path=u'/Users/katherinebarnhart/Desktop/RESEARCH/seaIcePPF/'
+dirList=glob.glob(path+'b.e11.B20TRC5CNBDRD-BRCP85C5CNBDRD.f09_g16.*nh.Analysis.nc')
+dirList2=glob.glob(path+'b.e11.B1850C5CN.f09_g16.005.cice.h1.aice_d_nh.*.Analysis.nc')#path=u'/Users/katherinebarnhart/Desktop/RESEARCH/seaIcePPF/'
 
 analysisFiles=[]    
 for fn in dirList:
@@ -41,7 +45,7 @@ NJ=104
 NM=30
 
 key='aice_d'
-f=nio.open_file(u'/Volumes/Pitcairn/seaicePPF/northernHemisphere/cesmleOutput/b.e11.f09_g16.001.cice.h1.aice_d_nh.002.timeseries.nc','r')
+f=nio.open_file(u'/Volumes/Pitcairn/seaicePPF/p/cesm0005/CESM-CAM5-BGC-LE/ice/proc/tseries/daily/aice_d/b.e11.B20TRC5CNBDRD.f09_g16.002.cice.h1.aice_d_nh.19200101-20051231.nc','r')
 landMask=f.variables[key][0,:,:]>120
 fillVal=f.variables[key].__dict__['_FillValue']
 del f
@@ -94,11 +98,15 @@ del fir1850
 del las1850
 
 
-
 #### now get the output from the DLM
 path=u'/Users/katherinebarnhart/MATLABwork/seaIceEmergence/output_v3/'
-dirList=glob.glob(path+'year*.csv')
+dirListName=glob.glob(path+'year*.csv')
 
+
+dirListLevelMean=glob.glob(path+'levelmean*.csv')
+dirListLevelStd=glob.glob(path+'levelstd*.csv')
+dirListSlopeMean=glob.glob(path+'slopemean*.csv')
+dirListSlopeStd=glob.glob(path+'slopestd*.csv')
 
 NJ=104
 NI=320
@@ -111,8 +119,13 @@ s_year=np.nan*np.ones((NJ, NI))
 e_year_bgmean=np.nan*np.ones((NJ, NI))
 slope=np.nan*np.ones((NM, NJ, NI))
 
+levelmean=np.nan*np.ones((numYears,NJ,NI))
+levelstd=np.nan*np.ones((numYears,NJ,NI))
+slopestd=np.nan*np.ones((numYears,NJ,NI))
+slopemean=np.nan*np.ones((numYears,NJ,NI))
 
-for rFN in dirList:
+# get values from dlm output
+for rFN in dirListName:
 
     rFile = open(rFN, 'r')
     print rFN
@@ -130,6 +143,83 @@ for rFN in dirList:
         e_year_mmean[nj, ni]=int(line[3])
     rFile.close()
     del rFile
+
+
+for rFN in dirListLevelMean:
+
+    rFile = open(rFN, 'r')
+    print rFN
+    rData=rFile.readlines()
+
+
+    for i in range(1,len(rData)):
+        #print i
+        line=rData[i].strip().split(',')
+        ni=int(line[0])-1# adjust from 1 based index to 0 based
+        nj=int(line[1])-1
+        
+        rest=line[2:]
+        levelmean[-len(rest):, nj, ni]=rest
+    rFile.close()
+    del rFile
+
+
+for rFN in dirListLevelStd:
+
+    rFile = open(rFN, 'r')
+    print rFN
+    rData=rFile.readlines()
+
+
+    for i in range(1,len(rData)):
+        #print i
+        line=rData[i].strip().split(',')
+        ni=int(line[0])-1# adjust from 1 based index to 0 based
+        nj=int(line[1])-1
+        
+        rest=line[2:]
+        levelstd[-len(rest):, nj, ni]=rest
+    rFile.close()
+    del rFile
+
+for rFN in dirListSlopeMean:
+
+    rFile = open(rFN, 'r')
+    print rFN
+    rData=rFile.readlines()
+
+
+    for i in range(1,len(rData)):
+        #print i
+        line=rData[i].strip().split(',')
+        ni=int(line[0])-1# adjust from 1 based index to 0 based
+        nj=int(line[1])-1
+        
+        rest=line[2:]
+        slopemean[-len(rest):, nj, ni]=rest
+    rFile.close()
+    del rFile
+
+
+for rFN in dirListSlopeStd:
+
+    rFile = open(rFN, 'r')
+    print rFN
+    rData=rFile.readlines()
+
+
+    for i in range(1,len(rData)):
+        #print i
+        line=rData[i].strip().split(',')
+        ni=int(line[0])-1# adjust from 1 based index to 0 based
+        nj=int(line[1])-1
+        
+        rest=line[2:]
+        slopestd[-len(rest):, nj, ni]=rest
+    rFile.close()
+    del rFile
+
+
 
 # now calculate the post-emergence slope
 
@@ -189,13 +279,12 @@ slope[isinf]=fillVal
     
 print 'making the netcdf'
 
-modelFile= u'/Volumes/Pitcairn/seaicePPF/northernHemisphere/cesmleOutput/b.e11.f09_g16.001.cice.h1.aice_d_nh.001.timeseries.Analysis.nc'
+modelFile= '/Volumes/Pitcairn/seaicePPF/northernHemisphere/analysisOutput/allModels.Summary.nh.RCP85.nc'
 f=nio.open_file(modelFile, 'r')
 
 ## Create this monthly averaged file as a new netcdf
-fn_monthOut=u'/Volumes/Pitcairn/seaicePPF/northernHemisphere/cesmleOutput/DLM__MCMC_results_v2.nc'
 fMonth=Dataset(fn_monthOut, 'w',format='NETCDF4')
-fillVal=f.variables['numSIF'].__dict__['_FillValue'][0]
+fillVal=f.variables['nSIFMean'].__dict__['_FillValue'][0]
 
 # create all the dimentions, set time to unlimited 
 for k in f.dimensions.keys():
@@ -207,7 +296,7 @@ for k in f.dimensions.keys():
                 
 # use the netCDF4 instead of pyNIO since it seems to work much better with unlimited variables      
 fMonthVars={}
-for key in {'TLAT', 'TLON','latt_bounds','lont_bounds'}:
+for key in {'TLAT', 'TLON','latt_bounds','lont_bounds', 'time', 'time_bounds'}:
     #print 'creating ', key
     # the netCDF4 module requires that if a fill value exists, it must be declared when the variable is created.
     try:
@@ -219,113 +308,151 @@ for key in {'TLAT', 'TLON','latt_bounds','lont_bounds'}:
     for attKey in atts.keys():
         if attKey != '_FillValue':
             setattr(fMonth.variables[key],attKey,atts[attKey])  
-for key in {'TLAT', 'TLON','latt_bounds','lont_bounds'}:       
+for key in {'TLAT', 'TLON','latt_bounds','lont_bounds', 'time_bounds'}:       
     fMonthVars[key][:,:]=f.variables[key][:]
-    
+fMonthVars['time'][:]=f.variables['time'][:]    
+
+
 satKey='numSIF'     
 
 fMonth.createDimension('nm', 30)
    
-cKey='meanSlope'
-fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
-setattr(fMonth.variables[cKey],'long_name','Mean of Slope') 
-setattr(fMonth.variables[cKey],'units','year')   
+cKey='nSIF'
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nm', 'time','nj','ni'),fill_value=fillVal)
+setattr(fMonth.variables[cKey],'long_name','Number of Sea Ice Free Days (original model output)') 
+setattr(fMonth.variables[cKey],'units','days')   
 setattr(fMonth.variables[cKey], 'coordinates', 'TLON TLAT')
+fMonthVars['nSIF'][:,:,:,:]=numSIF   
+   
+   # dlm results
+   
+   
+cKey='dlm_levelmean'
+fMonthVars[cKey]=fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('time','nj','ni'),fill_value=fillVal)
+setattr(fMonth.variables[cKey],'long_name','Mean level of nSIF in DLM') 
+setattr(fMonth.variables[cKey],'units','number of sea ice free days per year')   
+setattr(fMonth.variables[cKey], 'coordinates', 'TLON TLAT')
+fMonthVars['dlm_levelmean'][:,:,:]=levelmean  
+   
+cKey='dlm_levelstd'
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('time','nj','ni'),fill_value=fillVal)
+setattr(fMonth.variables[cKey],'long_name','Standard deviation of level of nSIF in DLM') 
+setattr(fMonth.variables[cKey],'units','number of sea ice free days per year')   
+setattr(fMonth.variables[cKey], 'coordinates', 'TLON TLAT')
+fMonthVars['dlm_levelstd'][:,:,:]=levelstd  
 
-cKey='stdSlope'
-fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
-setattr(fMonth.variables[cKey],'long_name','Standard Deviation of Slope') 
-setattr(fMonth.variables[cKey],'units','year')   
+   
+cKey='dlm_slopemean'
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('time','nj','ni'),fill_value=fillVal)
+setattr(fMonth.variables[cKey],'long_name','Mean slope of nSIF in DLM') 
+setattr(fMonth.variables[cKey],'units','number of sea ice free days per year')   
 setattr(fMonth.variables[cKey], 'coordinates', 'TLON TLAT')
+fMonthVars['dlm_levelmean'][:,:,:]=slopemean  
+   
+cKey='dlm_slopestd'
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('time','nj','ni'),fill_value=fillVal)
+setattr(fMonth.variables[cKey],'long_name','Standard deviation of slope of nSIF in DLM') 
+setattr(fMonth.variables[cKey],'units','number of sea ice free days per year')   
+setattr(fMonth.variables[cKey], 'coordinates', 'TLON TLAT')
+fMonthVars['dlm_levelstd'][:,:,:]=slopestd     
+   
+   
+# post emergence slope
+cKey='meanPostEmergenceExpansion'
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
+setattr(fMonth.variables[cKey],'long_name','Mean of Post Emergence Expansion of Open Water') 
+setattr(fMonth.variables[cKey],'units','days per year')   
+setattr(fMonth.variables[cKey], 'coordinates', 'TLON TLAT')
+fMonthVars['meanPostEmergenceExpansion'][:,:]=meanSlope
+
+
+cKey='stdPostEmergenceExpansion'
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
+setattr(fMonth.variables[cKey],'long_name','Standard Deviation of Slope') 
+setattr(fMonth.variables[cKey],'units','days per year')   
+setattr(fMonth.variables[cKey], 'coordinates', 'TLON TLAT')
+fMonthVars['stdPostEmergenceExpansion'][:,:]=stdSlope
  
                                                                                              
-cKey='meanSlope_masked'
-fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
+cKey='meanPostEmergenceExpansion_masked'
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
 setattr(fMonth.variables[cKey],'long_name','Mean of Slope (masked by Pval)') 
-setattr(fMonth.variables[cKey],'units','year')   
+setattr(fMonth.variables[cKey],'units','days per year')   
 setattr(fMonth.variables[cKey], 'coordinates', 'TLON TLAT')
+fMonthVars['meanPostEmergenceExpansion_masked'][:,:]=meanSlope_masked
 
-cKey='stdSlope_masked'
-fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
+cKey='stdPostEmergenceExpansion_masked'
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
 setattr(fMonth.variables[cKey],'long_name','Standard Deviation of Slope (masked by Pval)') 
-setattr(fMonth.variables[cKey],'units','year')   
+setattr(fMonth.variables[cKey],'units','days per year')   
 setattr(fMonth.variables[cKey], 'coordinates', 'TLON TLAT')
+fMonthVars['stdPostEmergenceExpansion_masked'][:,:]=stdSlope_masked
                                                                                                                                                                                                                                                   
-
-cKey='pval'
-fMonth.createVariable(cKey, 'f', ('nm', 'nj','ni'),fill_value=fillVal)
-setattr(fMonth.variables[cKey],'long_name','Trend pValue') 
+cKey='pval_PostEmergenceExpansion'
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nm', 'nj','ni'),fill_value=fillVal)
+setattr(fMonth.variables[cKey],'long_name','Trend pValue for post emergence expansion of open water') 
 setattr(fMonth.variables[cKey],'units','')   
 setattr(fMonth.variables[cKey], 'coordinates', 'nm TLON TLAT')
+fMonthVars['pval_PostEmergenceExpansion'][:,:,:]=pval
 
-cKey='R'
-fMonth.createVariable(cKey, 'f', ('nm', 'nj','ni'),fill_value=fillVal)
-setattr(fMonth.variables[cKey],'long_name','R2') 
+cKey='R_PostEmergenceExpansion'
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nm', 'nj','ni'),fill_value=fillVal)
+setattr(fMonth.variables[cKey],'long_name','Trend R2 for post emergence expansion of open water') 
 setattr(fMonth.variables[cKey],'units','')
 setattr(fMonth.variables[cKey], 'coordinates', 'nm TLON TLAT')
+fMonthVars['R_PostEmergenceExpansion'][:,:,:]=R   
 
-cKey='slope'
-fMonth.createVariable(cKey, 'f', ('nm', 'nj','ni'),fill_value=fillVal)
-setattr(fMonth.variables[cKey],'long_name','Trend Slope') 
+cKey='PostEmergenceExpansionRate'
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nm', 'nj','ni'),fill_value=fillVal)
+setattr(fMonth.variables[cKey],'long_name','Trend Slope for post emergence expansion of open water (by model)') 
 setattr(fMonth.variables[cKey],'units','Days per Year')
 setattr(fMonth.variables[cKey], 'coordinates', 'nm TLON TLAT')
+fMonthVars['PostEmergenceExpansionRate'][:,:,:]=slope
 
-cKey='slope_masked'
-fMonth.createVariable(cKey, 'f', ('nm', 'nj','ni'),fill_value=fillVal)
-setattr(fMonth.variables[cKey],'long_name','Trend Slope Masked by Pval <0.05') 
+cKey='PostEmergenceExpansion_masked'
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nm', 'nj','ni'),fill_value=fillVal)
+setattr(fMonth.variables[cKey],'long_name','Trend Slope for post emergence expansion of open water (by model) masked by Pval <0.05') 
 setattr(fMonth.variables[cKey],'units','Days per Year')
 setattr(fMonth.variables[cKey], 'coordinates', 'nm TLON TLAT')
-
-
-fMonth.variables['slope_masked'][:,:,:]=slope_masked
-fMonth.variables['slope'][:,:,:]=slope
-fMonth.variables['meanSlope'][:,:]=meanSlope
-fMonth.variables['stdSlope'][:,:]=stdSlope
-
-fMonth.variables['meanSlope_masked'][:,:]=meanSlope_masked
-fMonth.variables['stdSlope_masked'][:,:]=stdSlope_masked
-
-fMonth.variables['pval'][:,:,:]=pval
-fMonth.variables['R'][:,:,:]=R   
+fMonthVars['PostEmergenceExpansion_masked'][:,:,:]=slope_masked
 
 ## shift years
 
 cKey='shift_year'
-fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
 setattr(fMonth.variables[cKey],'long_name','Shift Year') 
 setattr(fMonth.variables[cKey],'units','year')  
 setattr(fMonth.variables[cKey], 'coordinates', 'TLON TLAT') 
+fMonthVars['shift_year'][:,:]=s_year        
                                                                      
 cKey='lag_time'
-fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
-setattr(fMonth.variables[cKey],'long_name','Lag Time (emergence-shift)') 
-setattr(fMonth.variables[cKey],'units','year')  
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
+setattr(fMonth.variables[cKey],'long_name','Lag Time (emergence (95% based) minus shift year)') 
+setattr(fMonth.variables[cKey],'units','years')  
 setattr(fMonth.variables[cKey], 'coordinates', 'TLON TLAT') 
+fMonthVars['lag_time'][:,:]=e_year-s_year        
                                                                                                                                                                                                                                                                                                                                                                                                               
 cKey='emergence_year'
-fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
 setattr(fMonth.variables[cKey],'long_name','Emergence Year(based on BG 95th range)') 
 setattr(fMonth.variables[cKey],'units','year')  
 setattr(fMonth.variables[cKey], 'coordinates', 'TLON TLAT') 
+fMonthVars['emergence_year'][:,:]=e_year        
+
 
 cKey='emergence_year_bgmean'
-fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
 setattr(fMonth.variables[cKey],'long_name','Emergence Year (based on BG mean)') 
 setattr(fMonth.variables[cKey],'units','year')  
 setattr(fMonth.variables[cKey], 'coordinates', 'TLON TLAT') 
+fMonthVars['emergence_year_bgmean'][:,:]=e_year_bgmean        
 
 cKey='emergence_year_mmean'
-fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
+fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nj','ni'),fill_value=fillVal)
 setattr(fMonth.variables[cKey],'long_name','Emergence Year (model mean)') 
 setattr(fMonth.variables[cKey],'units','year')  
 setattr(fMonth.variables[cKey], 'coordinates', 'TLON TLAT') 
-
-fMonth.variables['emergence_year'][:,:]=e_year        
-fMonth.variables['shift_year'][:,:]=s_year        
-
-fMonth.variables['lag_time'][:,:]=e_year-s_year        
-fMonth.variables['emergence_year_bgmean'][:,:]=e_year_bgmean        
-fMonth.variables['emergence_year_mmean'][:,:]=e_year_mmean        
+fMonthVars['emergence_year_mmean'][:,:]=e_year_mmean        
     
                                                      
 fMonth.close()   
