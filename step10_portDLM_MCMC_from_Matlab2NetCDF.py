@@ -315,7 +315,7 @@ fMonthVars['time'][:]=f.variables['time'][:]
 
 satKey='numSIF'     
 
-fMonth.createDimension('nm', 30)
+#fMonth.createDimension('nm', 30)
    
 cKey='nSIF'
 fMonthVars[cKey]=fMonth.createVariable(cKey, 'f', ('nm', 'time','nj','ni'),fill_value=fillVal)
