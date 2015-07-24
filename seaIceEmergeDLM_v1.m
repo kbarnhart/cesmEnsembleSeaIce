@@ -1,5 +1,5 @@
     
-function seaIceEmergeDLM_v1(startyi, stopyi)
+function seaIceEmergeDLM_v1(startyi, stopyi, SIdata)
 
 addpath(genpath('mcmcstat'))
 addpath(genpath('dlmtbx'))
@@ -10,7 +10,9 @@ addpath(genpath('dlmtbx'))
 % time_ensemble = ncread(fin,'time_ensemble') ; 
 % time_background = ncread(fin,'time_background') ; 
 
-load SIdata
+load(SIdata)
+
+splitStr=strsplit(SIdata, '.');
 
 NI=size(nSIF_ensemble,1);
 NJ=size(nSIF_ensemble,2);
@@ -19,7 +21,7 @@ NY=size(nSIF_ensemble,3);
 NBY=size(nSIF_background1850,3);
 
 BGmask=mean(nSIF_background1850,3);
-landmask=BGmask<355;
+landmask=BGmask<360;
 
 yesInds=find(landmask);
 
@@ -113,11 +115,13 @@ end
 % csvwrite(['/home/barnhark/seaIceEmergence/slopestd_',num2str(startyi),'.csv'], slopestd_out)
 
 %writeCSV
-csvwrite(['output_v3/year_',num2str(startyi),'.csv'], year_out)
-csvwrite(['output_v3/levelmean_',num2str(startyi),'.csv'], levelmean_out)
-csvwrite(['output_v3/slopemean_',num2str(startyi),'.csv'], slopemean_out)
-csvwrite(['output_v3/levelstd_',num2str(startyi),'.csv'], levelstd_out)
-csvwrite(['output_v3/slopestd_',num2str(startyi),'.csv'], slopestd_out)
+outfile='output_revisions_withbothRCP_nhsh';
+
+csvwrite([outfile,'/year.', splitStr{2}, '.', splitStr{3},'.', num2str(startyi),'.csv'], year_out)
+csvwrite([outfile,'/levelmean.', splitStr{2}, '.', splitStr{3},'.', num2str(startyi),'.csv'], levelmean_out)
+csvwrite([outfile,'/slopemean.', splitStr{2}, '.', splitStr{3},'.', num2str(startyi),'.csv'], slopemean_out)
+csvwrite([outfile,'/levelstd.', splitStr{2}, '.', splitStr{3},'.', num2str(startyi),'.csv'], levelstd_out)
+csvwrite([outfile,'/slopestd.', splitStr{2}, '.', splitStr{3},'.', num2str(startyi),'.csv'], slopestd_out)
 
 
 
