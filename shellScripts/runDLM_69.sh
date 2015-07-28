@@ -1,3 +1,3 @@
 #!/bin/bash 
 cd /home/barnhark/seaIceEmergence 
-matlab -r "seaIceEmergeDLM_v1(2801,3000, 'SIdata.nh.RCP85.mat'), exit" -nodesktop -nosplash 
+matlab -r "seaIceEmergeDLM_v1(1001,1500, 'SIdata.sh.RCP85.mat'), exit" -nodesktop -nosplash 
