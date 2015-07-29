@@ -31,7 +31,7 @@ for f=1:length(dirList)
 
     numRun=numel(yesInds);
     total=1;
-    incr=200;
+    incr=500;
 
     
     fl='#!/bin/bash \n';
