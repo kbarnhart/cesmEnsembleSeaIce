@@ -6,6 +6,7 @@ library(ncdf)
 ns=c("nh","sh")
 rcp=c("RCP85", "RCP45")
 
+# start profiler to look for efficiency improvements
 Rprof("profileBootstrapCI.out")
 
 for (n in 1:2)
@@ -145,5 +146,7 @@ for (n in 1:2)
 
   }
 }
+
+# profile code at end
 Rprof(NULL)
 summaryRprof("profileBootstrapCI.out")
