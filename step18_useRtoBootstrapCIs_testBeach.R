@@ -1,3 +1,4 @@
+#!/usr/local/bin/R
 # Bootstrap code
 library(boot)
 library(ncdf)
@@ -5,8 +6,6 @@ library(ncdf)
 ns=c("nh","sh")
 rcp=c("RCP85", "RCP45")
 
-# start profiler to look for efficiency improvements
-Rprof("profileBootstrapCI.out")
 
 for (n in 1:2)
 {
@@ -55,40 +54,40 @@ for (n in 1:2)
       sd_var <- array(data = NA, dim=c(ni, nj, ny))
       mean_var <- array(data = NA, dim=c(ni, nj, ny))
       
-      for (nii in 1:ni)
-      {
-        print(nii)
-        for (njj in 1:nj)
-        {
-        
-          for (nyy in 1:ny)
-          {
-            vals=data[nii,njj,nyy,]
-            naTest<-is.na(mean(vals))
-            if (naTest==FALSE)
-            {
-              waterTest<-(mean(vals)<360)
-              
-              if (waterTest==TRUE)
-              {
-            
-              boot_result_mean <- boot(vals,statistic=samplemean,R=1000)
-              mean_var[nii, njj, nyy] <- mean(vals,na.rm=T)
-              mean_ci <- boot.ci(boot_result_mean,conf = 0.95,type = "basic")
-              mean_ub[nii, njj, nyy] <- mean_ci$basic[5]
-              mean_lb[nii, njj, nyy] <- mean_ci$basic[4]
-              
-              boot_result_stdev <- boot(vals,statistic=samplesd,R=1000)
-              sd_var[nii, njj, nyy] <- sd(vals,na.rm=T)
-              sd_ci <- boot.ci(boot_result_stdev,conf = 0.95, type = "basic")
-              sd_ub[nii, njj, nyy] <- sd_ci$basic[5]
-              sd_lb[nii, njj, nyy] <- sd_ci$basic[4] 
-
-              }
-            }
-          }
-        }
-      }
+#       for (nii in 1:ni)
+#       {
+#         print(nii)
+#         for (njj in 1:nj)
+#         {
+#         
+#           for (nyy in 1:ny)
+#           {
+#             vals=data[nii,njj,nyy,]
+#             naTest<-is.na(mean(vals))
+#             if (naTest==FALSE)
+#             {
+#               waterTest<-(mean(vals)<360)
+#               
+#               if (waterTest==TRUE)
+#               {
+#             
+#               boot_result_mean <- boot(vals,statistic=samplemean,R=1000)
+#               mean_var[nii, njj, nyy] <- mean(vals,na.rm=T)
+#               mean_ci <- boot.ci(boot_result_mean,conf = 0.95,type = "basic")
+#               mean_ub[nii, njj, nyy] <- mean_ci$basic[5]
+#               mean_lb[nii, njj, nyy] <- mean_ci$basic[4]
+#               
+#               boot_result_stdev <- boot(vals,statistic=samplesd,R=1000)
+#               sd_var[nii, njj, nyy] <- sd(vals,na.rm=T)
+#               sd_ci <- boot.ci(boot_result_stdev,conf = 0.95, type = "basic")
+#               sd_ub[nii, njj, nyy] <- sd_ci$basic[5]
+#               sd_lb[nii, njj, nyy] <- sd_ci$basic[4] 
+# 
+#               }
+#             }
+#           }
+#         }
+#       }
       
       niDIM<-dim.def.ncdf( SIfile$dim$ni$name, SIfile$dim$ni$units, SIfile$dim$ni$vals, unlim=FALSE, create_dimvar=FALSE)
       njDIM<-dim.def.ncdf( SIfile$dim$nj$name, SIfile$dim$nj$units, SIfile$dim$nj$vals, unlim=FALSE, create_dimvar=FALSE)
@@ -142,6 +141,3 @@ for (n in 1:2)
   }
 }
 
-# profile code at end
-Rprof(NULL)
-summaryRprof("profileBootstrapCI.out")

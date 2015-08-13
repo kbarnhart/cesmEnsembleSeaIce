@@ -62,9 +62,6 @@ for nsk in nskey:
 			analysisFiles.append(Dataset(fn, 'r'))
 			#print fn, (datetime.now()-startTime)
 		
-	
-
-
 
 		key='numSIF'
 		f=nio.open_file(dirList[0],'r')
