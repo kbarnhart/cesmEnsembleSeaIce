@@ -501,7 +501,7 @@ for (idx in 1:nrow(pointlist)){
   filename <- str_c(outF, '/',pointlist$sitename[idx],"_Residuals_mean.pdf")
   pdf(filename)
   print(ggplot(data=resid_df, aes(x=tA, y=resid)) + geom_point() + 
-              xlim(c(1920,2100)) +  xlab('Year') + ylab('Residual') +
+              xlim(c(1920,2100)) +  xlab('Year') + ylab('Residual (days)') +
               geom_smooth()+theme(panel.background = element_blank() )+
           theme(panel.border = element_rect(colour = "black", fill=NA, size=1))+
           theme(axis.text = element_text(size = fnt_sz),
@@ -514,7 +514,7 @@ for (idx in 1:nrow(pointlist)){
  filename <- str_c(outF, '/',pointlist$sitename[idx],"_Residuals_all.pdf")
  pdf(filename)
  print(ggplot(data=resid_df_m, aes(x=tA, y=value)) + geom_point(alpha=0.5) + 
-        xlim(c(1920,2100)) +  xlab('Year') + ylab('Residual') +
+        xlim(c(1920,2100)) +  xlab('Year') + ylab('Residual (days)') +
         geom_smooth()+theme(panel.background = element_blank())+
          theme(panel.border = element_rect(colour = "black", fill=NA, size=1))+
          theme(axis.text = element_text(size = fnt_sz),
