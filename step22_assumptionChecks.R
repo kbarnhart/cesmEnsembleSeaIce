@@ -286,7 +286,7 @@ for (idx in 1:nrow(pointlist)){
     
     filename <- str_c(outF, '/',pointlist$sitename[idx],"_QQuntruncated.pdf")
     pdf(filename)
-    y <- quantile(qq_u_df$qq_dat_un, c(0.25, 0.75))
+    y <- quantile(qq_u_df$qq_dat_u, c(0.25, 0.75))
     x <- qnorm(c(0.25, 0.75))
     slope <- diff(y)/diff(x)
     int <- y[1L] - slope * x[1L]
@@ -340,7 +340,7 @@ for (idx in 1:nrow(pointlist)){
     dev.off()
   }
   # Both bound 1 and bound 2 exist
-  else {
+  else if (!is.na(pointlist$bound1[idx]) & !is.na(pointlist$bound2[idx]) ){
     qq_dat_l<-site_resid_noNA_df[1:(pointlist$bound1[idx]-70)]
     qq_l_df<-data.frame(qq_dat_l)
     filename <- str_c(outF, '/',pointlist$sitename[idx],"_QQlowertruncated.pdf")
@@ -398,7 +398,7 @@ for (idx in 1:nrow(pointlist)){
     dev.off()
     
   }
-  
+
   
   # plot the model results (include upper and lower bounds, and truncation locations)
   filename <- str_c(outF, '/', pointlist$sitename[idx],"_DLMresults.pdf")
