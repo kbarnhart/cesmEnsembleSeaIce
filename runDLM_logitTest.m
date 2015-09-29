@@ -1,13 +1,34 @@
-function [shiftYear,emergeYear2, emergeYear, levelmean, levelstd, slopemean, slopestd]=runDLM(data, BGdata, time_ensemble, nsam, nsimu)
+function [shiftYear,emergeYear2, emergeYear, levelmean, levelstd, slopemean, slopestd]=runDLM_logitTest(data, BGdata, time_ensemble, nsam, nsimu)
 % written by K. Barnhart
 % modified from example code given by Marco Laine associated with the DLM matlab
 % toolbox.
 
+% this version of runDLM was specifically modifed to test
+% using a logit transformation. 
+
+
+%% LOGIT TRANSFORM
+
+BGsave=BGdata;
+dataSave=data;
+
+BGmeanUT=nanmean(BGdata);
+BGstdUT=nanstd(BGdata);
+BGubUT=BGmeanUT+2*BGstdUT;
+BGlbUT=BGmeanUT-2*BGstdUT;
+
+BGmean=log(max(1,BGmeanUT)/365)-log(1-(max(1,BGmeanUT)/365));
+BGstd=log(max(1,BGstdUT)/365)-log(1-(max(1,BGstdUT)/365));
+BGub=log(max(1,BGubUT)/365)-log(1-(max(1,BGubUT)/365));
+BGlb=log(max(1,BGlbUT)/365)-log(1-(max(1,BGlbUT)/365));
+
+BGdata=log(max(1,BGsave)/365)-log(1-(max(1,BGsave)/365));
+data=log(max(dataSave,1)/365)-log(1-(max(dataSave,1)/365));
+
+maxVal=log(364/365)-log(1-(364/365))+2;
+
+%%
 % calculate the mean and upper and lower bounds of the background control runDLM
-BGmean=nanmean(BGdata);
-BGstd=nanstd(BGdata);
-BGub=BGmean+2*BGstd;
-BGlb=BGmean-2*BGstd;
 
 % this is a holdover from a time when I only used a selection of the entire time frame
 dataSel=data;
@@ -102,7 +123,7 @@ dlm_sample = dlmsmosam(dlm,nsam);
 
 %%
 % Sample trend statistics form DLM sample
-levelsamp = ys*squeeze(dlm_sample(1,:,:)); % sample of levels
+levelsamp = squeeze(dlm_sample(1,:,:)); % sample of levels
 levelmean = mean(levelsamp, 2);              % their mean
 levelstd = std(levelsamp, 0, 2);
 
@@ -117,7 +138,7 @@ s2 = std((levelsamp(off:end,:)-levelsamp(1:end-off+1,:))/off, 0,2);
 % plot(timeSel(off:end),t2)
 % plot(timeSel(off:end),t2-2*s2, 'r');grid;
 
-slopesamp = ys*squeeze(dlm_sample(2,:,:));
+slopesamp = squeeze(dlm_sample(2,:,:));
 slopemean=mean(slopesamp,2);
 slopestd=std(slopesamp, 0, 2);
 
@@ -163,9 +184,19 @@ else
     shiftYear=time(shiftInd);
 end
 
+% some of this needs to be different in logit-land
+% 1) first, use the mean and std of bg BEFORE transform to construct CIs
+% then transform
+% 2) transform totally out threhsold. 
+
+
 over2=(levelmean+(2*levelstd)<BGlb);
 under2=(levelmean-(2*levelstd)>BGub);
-totallyOut=levelmean>363;
+
+totalOutThreshUT=363;
+totalOutThresh=log(max(1,totalOutThreshUT)/365)-log(1-(max(1,totalOutThreshUT)/365));
+
+totallyOut=levelmean>totalOutThresh;
 
 out2=over2+under2+totallyOut;
 emergeInd2=find(out2>0, 1, 'first');
@@ -193,44 +224,41 @@ else
 end
 
 
-
-
 %% plots
 % figure;
 % dlmplotfit(dlm, time, ys)
 % title('Title');xlabel('time');ylabel('Open Water Days Per Year]')
-% %
+%
 % figure;
 % dlmplotdiag(dlm, time, ys)
 
 % redo plot QQ plot for split up residuals
 figure;
-dlmplotdiag_krbMOD(dlm, time, ys)
+dlmplotdiag_logit_krbMOD(dlm, time, ys)
 
 
 % %%%%%
 % figure;
 % hold on
 % for i=1:5:nsam
-%   plot(time,ys*squeeze(dlm_sample(1,:,i)),'-')
+%   plot(time,squeeze(dlm_sample(1,:,i)),'-')
 % end
 % hold off
 % 
 % figure;
 % hold on
 % for i=1:5:nsam
-%   plot(time,ys*squeeze(dlm_sample(2,:,i)),'-')
+%   plot(time,squeeze(dlm_sample(2,:,i)),'-')
 % end
 % hold off
 %%%%%%
 
 % % The next figure shows prior and posterior distributions for
 % % standard deviations from the diagonal of model error matrix |W|.
-% figure; clf
+% figure(5); clf
 % mcmcplot(dlm.chain,[],dlm.res,'denspanel',2);
 % subplot(2,1,1);title('prior and posterior for variance parameters');xlabel('parameter w(2,2)')
 % subplot(2,1,2);title('');xlabel('parameter w(3,3)')
-
 
 figure; clf
 confband(timeSel(off:end),t2,s2);grid;
@@ -252,16 +280,31 @@ plot([1920, 2120],[BGmean, BGmean])
 plot([1920, 2120],[BGub, BGub])
 plot([1920, 2120],[BGlb, BGlb])
 
-
-plot([shiftYear, shiftYear],[0,365])
-plot([emergeYear, emergeYear],[0,365])
-plot([emergeYear2, emergeYear2],[0,365])
+plot([shiftYear, shiftYear],[0,10])
+plot([emergeYear, emergeYear],[0,10])
+plot([emergeYear2, emergeYear2],[0,10])
 
 hold off
 
 xlim([time(1),time(end)+20]); % match axis to other plots
-title('Model Output, Untransformed');
-ylabel('Days Per Year')
+title('Model Output, Logit Transformation');
+ylabel('Logit Transformation: Days Per Year')
 xlabel('Time')
+
+
+% %% UNLOGIT Transform (dlm_sample)
+% 
+% dlm_sample_save=dlm_sample;
+% 
+% % to return to days of open water, first scale by ys, then un-logit
+% % transform, then multiply the level term by 365
+% 
+% dlm_sample=(exp(ys.*dlm_sample_save))./(1+exp(ys.*dlm_sample_save));
+% dlm_sample(1,:,:)=365.*dlm_sample(1,:,:);
+% 
+% 
+% BGmeanUT
+% BGubUT
+% BGlbUT
 
 end
